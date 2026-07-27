@@ -20,7 +20,12 @@
     numbersep=5pt,
     commentstyle=\color{gray},
     keywordstyle=\color{blue},
-    stringstyle=\color{teal}
+    stringstyle=\color{teal},
+    extendedchars=true,
+    literate=
+     {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+     {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+     {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
 }
 
 % --- Bibliografía (natbib + bibtex, referencias.bib) ---
@@ -78,7 +83,78 @@
 % TODO: redactar introducción (contexto del proyecto ArtiSync, objetivo del informe, alcance del consumo REST).
 
 \section{Paso a paso del consumo de la API REST}
-% TODO: documentar, con capturas y fragmentos de código (login, registro, 2FA, CRUD de usuarios), cómo el frontend AlpineJS consume cada endpoint del backend.
+
+Esta sección documenta, con fragmentos de código extraídos directamente de los archivos fuente del repositorio (sin reescribir ni parafrasear), cómo el frontend AlpineJS consume la API REST del backend Spring Boot de ArtiSync. Todos los verbos HTTP y códigos de estado citados siguen la semántica definida en \cite{rfc9110}, y todos los cuerpos de petición/respuesta se serializan en formato JSON según \cite{rfc8259}.
+
+\begin{enumerate}
+
+    \item \textbf{Configuración del cliente HTTP}\label{step:cliente-http}
+
+    Todas las peticiones autenticadas del frontend pasan por un único punto de entrada: \texttt{api-client.js}. Ahí se define la URL base del backend y el token de acceso se persiste en \texttt{localStorage} bajo la clave \texttt{accessToken}, siguiendo el esquema de token portador (\emph{Bearer}) de \cite{rfc7519}:
+
+    \lstinputlisting[firstline=1,lastline=1,firstnumber=1,caption={Constante \texttt{API\_BASE\_URL} (api-client.js, línea 1)},label={lst:api-base-url}]{../api-client.js}
+
+    \lstinputlisting[firstline=3,lastline=13,firstnumber=3,caption={Objeto \texttt{authStore}: lectura, escritura y borrado del token en \texttt{localStorage} (api-client.js, líneas 3--13)},label={lst:auth-store}]{../api-client.js}
+
+    La función \texttt{fetchWithAuth()} envuelve el \texttt{fetch()} nativo del navegador: fija por defecto los headers \texttt{Content-Type: application/json} y \texttt{Accept: application/json} (línea 19--20), y si existe un token guardado, agrega el header \texttt{Authorization: Bearer \textless token\textgreater} (líneas 24--26) antes de resolver la URL completa concatenando \texttt{API\_BASE\_URL} con la ruta relativa recibida (línea 33):
+
+    \lstinputlisting[firstline=15,lastline=45,firstnumber=15,caption={Función \texttt{fetchWithAuth()} (api-client.js, líneas 15--45)},label={lst:fetch-with-auth}]{../api-client.js}
+
+    \item \textbf{Autenticación inicial: \texttt{POST /auth/login}}\label{step:login}
+
+    Archivo: \texttt{login.html}. El formulario de inicio de sesión envía el correo y la contraseña capturados por Alpine (\texttt{x-model="form.correo"} / \texttt{x-model="form.contrasena"}) como cuerpo JSON del método \texttt{POST}, conforme a la semántica de creación/procesamiento de recursos descrita en \cite{rfc9110}:
+
+    \lstinputlisting[firstline=272,lastline=289,firstnumber=272,caption={\texttt{POST /auth/login}: petición, body y manejo inicial de la respuesta (login.html, líneas 272--289)},label={lst:login-post}]{../login.html}
+
+    La respuesta se interpreta según el contrato del backend: si el campo \texttt{requiere2fa} viene en \texttt{true}, el flujo normal de login se detiene y se activa el formulario de verificación en dos pasos (ver Paso~\ref{step:2fa}) en lugar de tratarlo como un error:
+
+    \lstinputlisting[firstline=291,lastline=294,firstnumber=291,caption={Interpretación del campo \texttt{requiere2fa} de la respuesta (login.html, líneas 291--294)},label={lst:requiere2fa}]{../login.html}
+
+    \item \textbf{Verbo GET con autenticación: listado paginado de usuarios}\label{step:get}
+
+    Archivo: \texttt{crud-usuarios.html}. La función \texttt{cargarUsuarios()} invoca \texttt{fetchWithAuth()} con la ruta relativa \texttt{/admin/usuarios} y los parámetros de consulta de paginación (\texttt{page}, \texttt{size}, \texttt{sortBy}, \texttt{direction}). Al no especificarse un segundo argumento de opciones, \texttt{fetchWithAuth()} usa \texttt{GET} por defecto y agrega automáticamente el header \texttt{Authorization} descrito en el Paso~\ref{step:cliente-http} sin que este código tenga que construirlo manualmente:
+
+    \lstinputlisting[firstline=331,lastline=347,firstnumber=331,caption={\texttt{GET /admin/usuarios} paginado vía \texttt{fetchWithAuth()} (crud-usuarios.html, líneas 331--347)},label={lst:get-usuarios}]{../crud-usuarios.html}
+
+    \item \textbf{Verbo PUT: edición de usuario}\label{step:put}
+
+    Archivo: \texttt{crud-usuarios.html}. La función \texttt{guardarEdicion()} envía la representación completa del recurso editado a \texttt{PUT /admin/usuarios/\{id\}}, consistente con la semántica de reemplazo idempotente de un recurso que define \cite{rfc9110} para el método \texttt{PUT}:
+
+    \lstinputlisting[firstline=412,lastline=434,firstnumber=412,caption={\texttt{PUT /admin/usuarios/\{id\}}: edición de usuario (crud-usuarios.html, líneas 412--434)},label={lst:put-usuario}]{../crud-usuarios.html}
+
+    \item \textbf{Verbo PATCH: cambio de estado}\label{step:patch}
+
+    Archivo: \texttt{crud-usuarios.html}. A diferencia del \texttt{PUT} anterior, \texttt{cambiarEstado()} solo modifica un atributo puntual del recurso (\texttt{estadoCuenta}), por lo que se usa \texttt{PATCH /admin/usuarios/\{id\}/estado} con un cuerpo mínimo (\texttt{\{ nuevoEstado \}}) en lugar de reenviar el usuario completo:
+
+    \lstinputlisting[firstline=436,lastline=452,firstnumber=436,caption={\texttt{PATCH /admin/usuarios/\{id\}/estado}: cambio de estado (crud-usuarios.html, líneas 436--452)},label={lst:patch-estado}]{../crud-usuarios.html}
+
+    \item \textbf{Verbo DELETE: eliminación y revocación de sesiones}\label{step:delete}
+
+    Archivo: \texttt{crud-usuarios.html}. Existen dos operaciones \texttt{DELETE} distintas: \texttt{revocarSesiones()} invalida todas las sesiones activas de un usuario (\texttt{DELETE /admin/usuarios/\{id\}/sesiones}) sin eliminar la cuenta, y \texttt{eliminarUsuario()} da de baja lógicamente al usuario (\texttt{DELETE /admin/usuarios/\{id\}}). Ambas confirman la acción con el usuario antes de ejecutarla (\texttt{confirm(...)}), dado que \texttt{DELETE} es una operación destructiva según \cite{rfc9110}:
+
+    \lstinputlisting[firstline=454,lastline=485,firstnumber=454,caption={\texttt{DELETE /admin/usuarios/\{id\}/sesiones} y \texttt{DELETE /admin/usuarios/\{id\}} (crud-usuarios.html, líneas 454--485)},label={lst:delete-usuario}]{../crud-usuarios.html}
+
+    \item \textbf{Manejo de JSON: serialización y parseo}\label{step:json}
+
+    En todos los pasos anteriores se repite el mismo patrón de serialización descrito en \cite{rfc8259}: el cuerpo saliente se construye con \texttt{JSON.stringify(...)} (ver Listados~\ref{lst:login-post}, \ref{lst:put-usuario} y \ref{lst:patch-estado}), y la respuesta entrante se parsea de forma asíncrona con \texttt{await response.json()} antes de leer cualquiera de sus campos (ver Listados~\ref{lst:get-usuarios} y \ref{lst:requiere2fa}). El header \texttt{Content-Type: application/json} fijado por \texttt{fetchWithAuth()} (Listado~\ref{lst:fetch-with-auth}) le indica al backend cómo interpretar ese cuerpo, y el header \texttt{Accept: application/json} le indica en qué formato se espera la respuesta.
+
+    \item \textbf{Autenticación avanzada: verificación 2FA}\label{step:2fa}
+
+    Archivo: \texttt{login.html}. Cuando el login detecta \texttt{requiere2fa: true} (Listado~\ref{lst:requiere2fa}), se muestra un segundo formulario que pide un código de 6 dígitos. Al enviarlo, \texttt{submitCodigo2FA()} llama a \texttt{POST /auth/2fa/verify} con el correo ya capturado y el código ingresado; esa segunda respuesta sí trae el \texttt{accessToken} completo (token portador según \cite{rfc7519}), y a partir de ahí el flujo termina exactamente igual que un login sin 2FA: se guarda el token y se redirige al panel:
+
+    \lstinputlisting[firstline=315,lastline=355,firstnumber=315,caption={\texttt{POST /auth/2fa/verify}: verificación del código y finalización del login (login.html, líneas 315--355)},label={lst:2fa-verify}]{../login.html}
+
+    \item \textbf{Manejo de errores}\label{step:errores}
+
+    El manejo de errores ocurre en dos niveles. A nivel de transporte, \texttt{fetchWithAuth()} intercepta cualquier respuesta con código \texttt{401} (no autorizado, según \cite{rfc9110}): limpia el token guardado y redirige a \texttt{login.html}, salvo que ya se encuentre en esa página, evitando así dejar al usuario con un token inválido en \texttt{localStorage} --- una práctica alineada con el control de gestión de sesiones que recomienda \cite{owasp2021}:
+
+    \lstinputlisting[firstline=35,lastline=42,firstnumber=35,caption={Interceptor de \texttt{401} en \texttt{fetchWithAuth()} (api-client.js, líneas 35--42)},label={lst:401-handler}]{../api-client.js}
+
+    A nivel de formulario, tanto \texttt{login.html} (Listado~\ref{lst:login-post}, líneas 284--289) como \texttt{registro.html} muestran al usuario el mensaje de error que el propio backend envía en el campo \texttt{data.message} del cuerpo de la respuesta, con un mensaje genérico de respaldo si ese campo no viene presente:
+
+    \lstinputlisting[firstline=418,lastline=426,firstnumber=418,caption={Manejo de errores con \texttt{data.message} / \texttt{data.error} (registro.html, líneas 418--426)},label={lst:registro-error}]{../registro.html}
+
+\end{enumerate}
 
 \section{Conclusiones}
 % TODO: redactar conclusiones del proyecto.
@@ -86,9 +162,8 @@
 % ============================================================
 % REFERENCIAS
 % ============================================================
-% TODO: agregar \cite{} en el cuerpo del documento a medida que se redacta;
-% \nocite{*} se usa temporalmente para verificar que las 9 entradas del .bib compilan.
-\nocite{*}
+% TODO: a medida que se redacten Introducción y Conclusiones, agregar más \cite{}
+% de las fuentes del .bib que aún no se citan explícitamente en el cuerpo del texto.
 \bibliographystyle{plain}
 \bibliography{referencias}
 
