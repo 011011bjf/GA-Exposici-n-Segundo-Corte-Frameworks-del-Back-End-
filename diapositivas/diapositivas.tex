@@ -1,0 +1,165 @@
+\documentclass{beamer}
+
+% --- Tema: simple y limpio, sin colores estridentes ---
+\usetheme{Madrid}
+\setbeamertemplate{navigation symbols}{}
+
+% --- Codificación ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+% --- Diagramas ---
+\usepackage{tikz}
+\usepackage{graphicx}
+\usetikzlibrary{arrows.meta, positioning}
+
+% --- Fragmentos de código (misma config que informe/informe.tex) ---
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numbersep=5pt,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{teal},
+    extendedchars=true,
+    literate=
+     {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+     {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+     {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+% --- Bibliografía (natbib + bibtex, reutiliza informe/referencias.bib) ---
+\usepackage{natbib}
+
+% --- Portada ---
+\title[Consumo REST -- ArtiSync]{Consumo de Web Services REST desde un Front-end AlpineJS --- Proyecto ArtiSync}
+\subtitle{Proyecto ArtiSync}
+\author[Figueroa \& Loor]{Figueroa Morales Bryan Javier \and Loor Medranda Marlon Taylor}
+\institute[UTEQ]{
+    Universidad Técnica Estatal de Quevedo \\
+    Facultad de Ciencias de la Computación y Diseño Digital \\
+    Carrera de Ingeniería de Software \\[6pt]
+    Aplicaciones Web (5to nivel) --- Segundo Corte \\
+    Docente: Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D.
+}
+\date{Julio 2026}
+
+\begin{document}
+
+% ============================================================
+% 1. PORTADA
+% ============================================================
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% ============================================================
+% 2. CONTEXTO
+% ============================================================
+\begin{frame}{Contexto}
+    \begin{itemize}
+        \item \textbf{ArtiSync}: plataforma que conecta clientes y creadores de servicios digitales.
+        \item Primer Corte: backend Spring Boot + PostgreSQL, con su API REST.
+        \item Este corte agrega un \textbf{frontend AlpineJS} sobre esa API REST \cite{fielding2000}.
+        \item Alcance: autenticación (login + 2FA) y CRUD de usuarios.
+    \end{itemize}
+\end{frame}
+
+% ============================================================
+% 3. DIAGRAMA DE FLUJO
+% ============================================================
+\begin{frame}{Flujo general}
+    \centering
+    \resizebox{0.92\linewidth}{!}{%
+    \begin{tikzpicture}[
+        node distance=1.3cm and 1.6cm,
+        box/.style={draw, rounded corners, minimum width=3.1cm, minimum height=1.2cm, align=center, font=\small}
+    ]
+        \node[box] (cliente) {Cliente\\AlpineJS};
+        \node[box, right=of cliente] (backend) {Backend\\Spring Boot (REST)};
+        \node[box, right=of backend] (bd) {Base de\\Datos};
+
+        \draw[-{Stealth}] ([yshift=3pt]cliente.east) -- node[above, font=\tiny]{JSON / HTTP} ([yshift=3pt]backend.west);
+        \draw[-{Stealth}] ([yshift=-3pt]backend.west) -- node[below, font=\tiny]{respuesta} ([yshift=-3pt]cliente.east);
+
+        \draw[-{Stealth}] ([yshift=3pt]backend.east) -- ([yshift=3pt]bd.west);
+        \draw[-{Stealth}] ([yshift=-3pt]bd.west) -- ([yshift=-3pt]backend.east);
+    \end{tikzpicture}%
+    }
+\end{frame}
+
+% ============================================================
+% 4. AUTENTICACIÓN
+% ============================================================
+\begin{frame}[fragile]{Autenticación}
+    \begin{itemize}
+        \item \texttt{POST /auth/login} envía correo y contraseña.
+        \item La respuesta trae el campo \texttt{requiere2fa}.
+        \item Si es \texttt{true}, se pide un código de 6 dígitos vía \texttt{POST /auth/2fa/verify}.
+    \end{itemize}
+    \vspace{4pt}
+    \lstinputlisting[firstline=291,lastline=294,firstnumber=291]{../login.html}
+\end{frame}
+
+% ============================================================
+% 5. CRUD DE USUARIOS
+% ============================================================
+\begin{frame}{CRUD de usuarios}
+    \begin{itemize}
+        \item Cuatro verbos HTTP \cite{rfc9110} sobre el recurso \texttt{usuarios}.
+    \end{itemize}
+    \vspace{6pt}
+    \centering
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Verbo} & \textbf{Endpoint} \\
+        \hline
+        GET & \texttt{/admin/usuarios} \\
+        PUT & \texttt{/admin/usuarios/\{id\}} \\
+        PATCH & \texttt{/admin/usuarios/\{id\}/estado} \\
+        DELETE & \texttt{/admin/usuarios/\{id\}} (+ \texttt{/sesiones}) \\
+        \hline
+    \end{tabular}
+\end{frame}
+
+% ============================================================
+% 6. MANEJO DE ERRORES
+% ============================================================
+\begin{frame}{Manejo de errores}
+    \begin{itemize}
+        \item \texttt{fetchWithAuth()} centraliza la detección de sesiones inválidas.
+        \item Respuesta \texttt{401} \(\Rightarrow\) se limpia el token de \texttt{localStorage}.
+        \item Redirección automática a \texttt{login.html} (salvo que ya esté ahí).
+    \end{itemize}
+\end{frame}
+
+% ============================================================
+% 7. CIERRE
+% ============================================================
+\begin{frame}{Cierre}
+    \begin{itemize}
+        \item Login con 2FA y CRUD completo, funcionando a nivel de frontend.
+        \item Prueba end-to-end contra el backend real: pendiente por configuración de entorno.
+        \item Diseño de esta presentación: texto mínimo y apoyo visual \cite{alley2013, mayer2009}.
+    \end{itemize}
+    \vspace{10pt}
+    \begin{center}
+        \Large ¡Gracias! ¿Preguntas?
+    \end{center}
+\end{frame}
+
+% ============================================================
+% REFERENCIAS
+% ============================================================
+\begin{frame}[allowframebreaks]{Referencias}
+    \footnotesize
+    \bibliographystyle{plain}
+    \bibliography{../informe/referencias}
+\end{frame}
+
+\end{document}
