@@ -1,0 +1,26 @@
+{
+  "descripcion": "Evidencia real: GET /api/admin/usuarios contra backend Spring Boot corriendo en Docker, usando el token del usuario de prueba (rol CLIENTE) creado en Bloque 1/2.",
+  "fecha_captura": "2026-07-27T22:56:45Z",
+  "herramienta": "curl -i (petición y respuesta reales, sin editar)",
+  "request": {
+    "method": "GET",
+    "url": "http://localhost:8080/api/admin/usuarios?page=0&size=10&sortBy=idUsuario&direction=desc",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, mismo accessToken real del Bloque 2]",
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 403,
+    "statusText": "Forbidden",
+    "body": {
+      "timestamp": "2026-07-27T22:56:45.507233596",
+      "status": 403,
+      "error": "Forbidden",
+      "message": "No tienes permisos suficientes para realizar esta acción",
+      "path": "/api/admin/usuarios",
+      "fieldErrors": null
+    }
+  },
+  "conclusion": "Resultado esperado: el usuario de prueba se registró con rol CLIENTE (el único permitido por POST /auth/registro para registro público), y AdminUserController protege este endpoint con @PreAuthorize(\"hasAuthority('USUARIO_VER') or hasRole('ADMIN')\"). No se cuenta con la contraseña en texto plano del seed admin@artisync.com (solo su hash bcrypt en la migración Flyway), y no se intentó ningún acceso indebido (p. ej. manipular la base de datos del backend) para evitar esta restricción — se documenta como limitación conocida, tal como se pidió."
+}

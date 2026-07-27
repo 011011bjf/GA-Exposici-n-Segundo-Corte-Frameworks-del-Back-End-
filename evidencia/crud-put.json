@@ -1,0 +1,32 @@
+{
+  "descripcion": "Evidencia real: PUT /api/admin/usuarios/2 (edición) contra backend Spring Boot corriendo en Docker, usando el token del usuario de prueba (rol CLIENTE).",
+  "fecha_captura": "2026-07-27T22:56:57Z",
+  "herramienta": "curl -i (petición y respuesta reales, sin editar)",
+  "request": {
+    "method": "PUT",
+    "url": "http://localhost:8080/api/admin/usuarios/2",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, mismo accessToken real del Bloque 2]",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "nombres": "Eduardo",
+      "apellidos": "Reinoso Editado",
+      "estadoCuenta": true,
+      "roles": ["CLIENTE"]
+    }
+  },
+  "response": {
+    "status": 403,
+    "statusText": "Forbidden",
+    "body": {
+      "timestamp": "2026-07-27T22:56:57.180748268",
+      "status": 403,
+      "error": "Forbidden",
+      "message": "No tienes permisos suficientes para realizar esta acción",
+      "path": "/api/admin/usuarios/2",
+      "fieldErrors": null
+    }
+  },
+  "conclusion": "Mismo motivo que crud-get.json: falta la autoridad USUARIO_EDITAR o rol ADMIN. Limitación conocida, no se intentó evitarla."
+}

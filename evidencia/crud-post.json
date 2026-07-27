@@ -1,0 +1,36 @@
+{
+  "descripcion": "Evidencia real: POST /api/admin/usuarios (creación de usuario) contra backend Spring Boot corriendo en Docker, usando el token del usuario de prueba (rol CLIENTE). Este es el endpoint que admin-usuarios.html corrigió recientemente (antes apuntaba a /admin/db-permisos/crear-usuario-sistema, que no existía → 404; ahora apunta aquí).",
+  "fecha_captura": "2026-07-27T22:56:57Z",
+  "herramienta": "curl -i (petición y respuesta reales, sin editar)",
+  "request": {
+    "method": "POST",
+    "url": "http://localhost:8080/api/admin/usuarios",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, mismo accessToken real del Bloque 2]",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "nombres": "Prueba",
+      "apellidos": "Admin Creado",
+      "correo": "test.admin.creado@uteq.edu.ec",
+      "contrasena": "TestEval2026",
+      "fechaNacimiento": "1998-03-10",
+      "idPais": 1,
+      "roles": ["CLIENTE"],
+      "estadoCuenta": true
+    }
+  },
+  "response": {
+    "status": 403,
+    "statusText": "Forbidden",
+    "body": {
+      "timestamp": "2026-07-27T22:56:57.450819126",
+      "status": 403,
+      "error": "Forbidden",
+      "message": "No tienes permisos suficientes para realizar esta acción",
+      "path": "/api/admin/usuarios",
+      "fieldErrors": null
+    }
+  },
+  "conclusion_clave": "El resultado cambió de 404 Not Found (endpoint inexistente, antes de la corrección) a 403 Forbidden (endpoint real, protegido correctamente) — esto CONFIRMA que la corrección de URL del prompt anterior funcionó: el payload y la ruta ahora son válidos según el backend real, solo falta la autorización de administrador para completar la creación. No se pudo obtener un token con rol ADMIN real (no se conoce la contraseña del seed admin@artisync.com, solo su hash), así que la creación exitosa end-to-end queda como limitación conocida, no como algo inventado."
+}
