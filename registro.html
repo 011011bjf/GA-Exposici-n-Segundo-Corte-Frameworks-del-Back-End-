@@ -6,6 +6,7 @@
     <title>ARTISYNC - Registro de Usuario</title>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="api-client.js"></script>
     <style>
         :root {
             --bg: #f8fafc;
@@ -403,7 +404,7 @@
                     this.cargando = true;
 
                     try {
-                        const response = await fetch('http://localhost:8080/api/auth/registro', {
+                        const response = await fetch(`${API_BASE_URL}/auth/registro`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -426,7 +427,7 @@
 
                         // Intentar hacer login automáticamente para obtener el token
                         try {
-                            const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
+                            const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ correo: this.form.correo, contrasena: this.form.contrasena })
