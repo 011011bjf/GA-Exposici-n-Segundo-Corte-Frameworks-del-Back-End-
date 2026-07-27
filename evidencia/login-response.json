@@ -1,0 +1,42 @@
+{
+  "descripcion": "Evidencia real de consumo REST: POST /api/auth/login contra backend Spring Boot corriendo en Docker, usando el usuario creado en el Bloque 1 (registro-response.json).",
+  "fecha_captura": "2026-07-27T22:32:32Z",
+  "herramienta": "curl -i (petición y respuesta reales, sin editar)",
+  "caso": "Login normal, usuario sin 2FA activado (requiere2fa: false) — es el caso esperado para un usuario recién registrado, ya que el registro no crea configuración de 2FA.",
+  "request": {
+    "method": "POST",
+    "url": "http://localhost:8080/api/auth/login",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "body": {
+      "correo": "test.eval@uteq.edu.ec",
+      "contrasena": "TestEval2026"
+    }
+  },
+  "response": {
+    "status": 200,
+    "statusText": "OK",
+    "headers": {
+      "Set-Cookie": "refreshToken=eyJhbGciOiJIUzUxMiJ9.eyJ0eXBlIjoicmVmcmVzaCI...[TRUNCADO por seguridad, JWT real de 271 caracteres, valido 7 dias]; Path=/api/auth; Max-Age=604800; HttpOnly; SameSite=Strict",
+      "Content-Type": "application/json",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
+      "Date": "Mon, 27 Jul 2026 22:32:32 GMT"
+    },
+    "body": {
+      "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0NMSUVOVEUiXSwicGVybWlzb3MiOlsiQ09O...[TRUNCADO por seguridad, JWT real de 474 caracteres, valido 1 hora]",
+      "tokenType": "Bearer",
+      "idUsuario": 2,
+      "correo": "test.eval@uteq.edu.ec",
+      "roles": ["CLIENTE"],
+      "permisos": ["CONTRATO_FIRMAR", "CONTRATO_VER", "MENSAJE_ENVIAR", "PEDIDO_CREAR", "SALA_VER", "TICKET_REVISAR"],
+      "requiere2fa": false,
+      "expiresIn": 3600000
+    }
+  },
+  "nota_permisos": "roles=[CLIENTE], sin ninguna autoridad USUARIO_* ni ROLE_ADMIN — se usa en el Bloque 3 para documentar por que este usuario NO puede acceder a /admin/usuarios.",
+  "nota_seguridad": "Los valores de accessToken y refreshToken se truncaron deliberadamente antes de subir este archivo a un repositorio público: son JWT reales y válidos (no texto de ejemplo), y publicar la cadena completa equivaldría a filtrar una credencial utilizable mientras no expire. Se conservó suficiente prefijo para verificar que la estructura del token (header.payload.signature en Base64URL) es real."
+}
