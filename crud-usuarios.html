@@ -245,13 +245,13 @@
                                 </template>
                             </td>
                             <td>
-                                <span :class="'badge badge-' + user.estadoCuenta" x-text="user.estadoCuenta"></span>
+                                <span :class="user.estadoCuenta ? 'badge badge-ACTIVO' : 'badge badge-SUSPENDIDO'" x-text="user.estadoCuenta ? 'Activo' : 'Suspendido'"></span>
                             </td>
                             <td>
                                 <div class="table-actions">
                                     <button class="btn btn-outline" @click="abrirEdicion(user)" title="Modificar usuario">Modificar</button>
-                                    <button class="btn btn-warning" @click="cambiarEstado(user.idUsuario, user.estadoCuenta === 'ACTIVO' ? 'SUSPENDIDO' : 'ACTIVO')" title="Suspender/Activar">
-                                        <span x-text="user.estadoCuenta === 'ACTIVO' ? 'Suspender' : 'Activar'"></span>
+                                    <button class="btn btn-warning" @click="cambiarEstado(user.idUsuario, !user.estadoCuenta)" title="Suspender/Activar">
+                                        <span x-text="user.estadoCuenta ? 'Suspender' : 'Activar'"></span>
                                     </button>
                                     <button class="btn btn-warning" @click="revocarSesiones(user.idUsuario)" title="Revocar sesiones activas">Revocar</button>
                                     <button class="btn btn-danger" @click="eliminarUsuario(user.idUsuario)" title="Eliminar logicamente">Eliminar</button>
@@ -434,11 +434,12 @@
                 },
 
                 async cambiarEstado(id, nuevoEstado) {
-                    if (!confirm(`¿Estás seguro de cambiar el estado a ${nuevoEstado}?`)) return;
+                    const etiqueta = nuevoEstado ? 'ACTIVO' : 'SUSPENDIDO';
+                    if (!confirm(`¿Estás seguro de cambiar el estado a ${etiqueta}?`)) return;
                     try {
                         const res = await fetchWithAuth(`/admin/usuarios/${id}/estado`, {
                             method: 'PATCH',
-                            body: JSON.stringify({ nuevoEstado })
+                            body: JSON.stringify({ estadoCuenta: nuevoEstado })
                         });
                         if (res.ok) {
                             alert('Estado cambiado con éxito');

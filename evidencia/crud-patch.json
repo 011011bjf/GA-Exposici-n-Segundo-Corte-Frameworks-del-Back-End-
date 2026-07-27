@@ -1,48 +1,43 @@
 {
-  "descripcion": "Evidencia real: PATCH /api/admin/usuarios/2/estado contra backend Spring Boot corriendo en Docker, usando el token del usuario de prueba (rol CLIENTE). Se hicieron DOS intentos porque el primero reveló un hallazgo no relacionado con permisos.",
-  "fecha_captura": "2026-07-27T22:56:57Z / 22:57:24Z",
+  "descripcion": "Evidencia real: PATCH /api/admin/usuarios/2/estado contra backend Spring Boot corriendo en Docker, usando el token del usuario de prueba (rol CLIENTE). Este archivo documenta un bug de contrato real que se encontró y ya se corrigió en crud-usuarios.html.",
+  "fecha_captura_original": "2026-07-27T22:56:57Z (payload roto) / 22:57:24Z (payload corregido a mano)",
+  "fecha_reprueba_tras_fix": "2026-07-27T23:10:08Z",
   "herramienta": "curl -i (petición y respuesta reales, sin editar)",
-  "intento_1_payload_actual_del_frontend": {
-    "descripcion": "Payload que HOY envía crud-usuarios.html (función cambiarEstado()): { nuevoEstado: 'SUSPENDIDO' }",
-    "request": {
-      "method": "PATCH",
-      "url": "http://localhost:8080/api/admin/usuarios/2/estado",
-      "headers": {
-        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad]",
-        "Content-Type": "application/json"
-      },
-      "body": { "nuevoEstado": "SUSPENDIDO" }
-    },
-    "response": {
-      "status": 400,
-      "statusText": "Bad Request",
-      "body": {
-        "timestamp": "2026-07-27T22:56:57.321971014",
+  "historial_del_hallazgo": {
+    "paso_1_bug_encontrado": {
+      "descripcion": "Payload que crud-usuarios.html enviaba ANTES del fix (función cambiarEstado()): { nuevoEstado: 'SUSPENDIDO' }",
+      "response_status": 400,
+      "response_body": {
         "status": 400,
         "error": "Bad Request",
         "message": "Error de validación en los datos de entrada",
-        "path": "/api/admin/usuarios/2/estado",
         "fieldErrors": { "estadoCuenta": "El estado de la cuenta es obligatorio" }
-      }
+      },
+      "hallazgo": "El backend NO reconocía el campo 'nuevoEstado'. El DTO real (ChangeEstadoRequest.java) espera 'estadoCuenta' (Boolean), no un string enum. Además, la comparación 'user.estadoCuenta === ACTIVO' en el badge y en el botón de toggle era incorrecta porque UserResponse.estadoCuenta también es Boolean, no string — el botón siempre mostraba 'Activar' sin importar el estado real."
     },
-    "hallazgo": "El backend NO reconoce el campo 'nuevoEstado'. El DTO real (ChangeEstadoRequest.java) espera un campo llamado 'estadoCuenta' de tipo Boolean, no un string enum. Esto es un bug de contrato en crud-usuarios.html independiente del problema de permisos: incluso un usuario ADMIN real fallaría hoy con este payload. La validación @Valid del DTO se ejecuta ANTES que la verificación @PreAuthorize, por eso este intento dio 400 en vez de 403."
+    "paso_2_payload_corregido_probado_manualmente": {
+      "descripcion": "Antes de tocar el código, se probó manualmente el payload correcto para aislar el problema: { estadoCuenta: false }",
+      "response_status": 403,
+      "conclusion": "Confirmó que, arreglando el payload, el único bloqueo restante era de permisos (403), no de contrato (400)."
+    },
+    "paso_3_fix_aplicado": "Se corrigieron 3 puntos en crud-usuarios.html: (1) el badge de estado ahora usa el booleano real con clases fijas badge-ACTIVO/badge-SUSPENDIDO y texto 'Activo'/'Suspendido'; (2) el botón de toggle ahora pasa !user.estadoCuenta (booleano) en vez de comparar contra un string; (3) cambiarEstado() ahora envía { estadoCuenta: nuevoEstado } en vez de { nuevoEstado }."
   },
-  "intento_2_payload_corregido": {
-    "descripcion": "Payload corregido para coincidir con ChangeEstadoRequest.java: { estadoCuenta: false }",
+  "prueba_final_post_fix": {
     "request": {
       "method": "PATCH",
       "url": "http://localhost:8080/api/admin/usuarios/2/estado",
       "headers": {
-        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad]",
+        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, token real de 474 caracteres]",
         "Content-Type": "application/json"
       },
-      "body": { "estadoCuenta": false }
+      "body": { "estadoCuenta": false },
+      "nota": "Este es exactamente el payload que ahora genera crud-usuarios.html con el fix aplicado (no un payload de prueba ad-hoc)."
     },
     "response": {
       "status": 403,
       "statusText": "Forbidden",
       "body": {
-        "timestamp": "2026-07-27T22:57:24.199799938",
+        "timestamp": "2026-07-27T23:10:08.041843191",
         "status": 403,
         "error": "Forbidden",
         "message": "No tienes permisos suficientes para realizar esta acción",
@@ -50,7 +45,6 @@
         "fieldErrors": null
       }
     },
-    "conclusion": "Con el payload correcto, el error pasa de 400 (contrato) a 403 (permisos) — confirma que el único bloqueo restante para este usuario de prueba es la falta de rol ADMIN/autoridad USUARIO_SUSPENDER, tal como en los demás endpoints admin."
-  },
-  "accion_pendiente_recomendada": "Corregir crud-usuarios.html: cambiar el body de cambiarEstado() de { nuevoEstado } a { estadoCuenta: boolean }. No se corrigió en este bloque porque este prompt era solo de captura de evidencia, no de edición de código — queda pendiente para un siguiente prompt si se aprueba."
+    "conclusion": "El 403 es ahora el ÚNICO bloqueo, igual que en GET/PUT/POST de /admin/usuarios (ver crud-get.json, crud-put.json, crud-post.json). El bug de contrato (400) quedó eliminado. La limitación restante sigue siendo la misma documentada en el informe: no se cuenta con credenciales reales de un usuario ADMIN para completar la operación con éxito."
+  }
 }
