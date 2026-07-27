@@ -203,7 +203,7 @@
                 <span>¡Sesión iniciada! Redirigiendo...</span>
             </div>
 
-            <form @submit.prevent="submitForm" x-show="!success">
+            <form @submit.prevent="submitForm" x-show="!success && !mostrarCampo2FA">
                 <div class="form-group">
                     <label for="correo">Correo Electrónico</label>
                     <input type="email" id="correo" x-model="form.correo" required>
@@ -219,7 +219,19 @@
                     <span x-show="cargando">Comprobando...</span>
                 </button>
             </form>
-            
+
+            <form @submit.prevent="submitCodigo2FA" x-show="mostrarCampo2FA && !success" x-cloak>
+                <div class="form-group">
+                    <label for="codigo2fa">Código de verificación (2FA)</label>
+                    <input type="text" id="codigo2fa" x-model="codigo2fa" required maxlength="6" inputmode="numeric" pattern="[0-9]{6}">
+                </div>
+
+                <button type="submit" class="btn-primary" :disabled="cargando">
+                    <span x-show="!cargando">Verificar código</span>
+                    <span x-show="cargando">Verificando...</span>
+                </button>
+            </form>
+
             <a href="registro.html" class="footer-link">¿No tienes cuenta? Regístrate aquí</a>
         </div>
     </div>
@@ -250,6 +262,8 @@
                 cargando: false,
                 error: null,
                 success: false,
+                mostrarCampo2FA: false,
+                codigo2fa: '',
 
                 async submitForm() {
                     this.error = null;
@@ -274,13 +288,60 @@
                             throw new Error('Credenciales incorrectas o error en el servidor');
                         }
 
+                        if (data.requiere2fa) {
+                            this.mostrarCampo2FA = true;
+                            return;
+                        }
+
                         // Guardar el token en el storage
                         if (data.accessToken) {
                             authStore.setToken(data.accessToken);
                         }
 
                         this.success = true;
-                        
+
+                        // Redirección al panel
+                        setTimeout(() => {
+                            window.location.href = 'crud-usuarios.html';
+                        }, 1000);
+
+                    } catch (err) {
+                        this.error = err.message;
+                    } finally {
+                        this.cargando = false;
+                    }
+                },
+
+                async submitCodigo2FA() {
+                    this.error = null;
+                    this.cargando = true;
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/auth/2fa/verify`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ correo: this.form.correo, codigo: this.codigo2fa })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            if (data.message) {
+                                throw new Error(data.message);
+                            }
+                            throw new Error('Código inválido o expirado');
+                        }
+
+                        // Guardar el token en el storage
+                        if (data.accessToken) {
+                            authStore.setToken(data.accessToken);
+                        }
+
+                        this.success = true;
+
                         // Redirección al panel
                         setTimeout(() => {
                             window.location.href = 'crud-usuarios.html';
