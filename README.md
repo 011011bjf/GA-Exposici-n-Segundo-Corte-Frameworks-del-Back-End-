@@ -62,6 +62,7 @@ Este repositorio contiene únicamente el frontend estático (HTML + Alpine.js, s
 | `POST` | `/auth/2fa/verify` | `login.html` (solo si el login exige 2FA) |
 | `POST` | `/auth/registro` | `registro.html` |
 | `GET` | `/admin/usuarios` | `crud-usuarios.html` (listado paginado y exportación) |
+| `POST` | `/admin/usuarios` | `admin-usuarios.html` (creación de usuario) |
 | `PUT` | `/admin/usuarios/{id}` | `crud-usuarios.html` (edición) |
 | `PATCH` | `/admin/usuarios/{id}/estado` | `crud-usuarios.html` (activar/desactivar) |
 | `DELETE` | `/admin/usuarios/{id}/sesiones` | `crud-usuarios.html` (revocar sesiones) |
@@ -69,7 +70,7 @@ Este repositorio contiene únicamente el frontend estático (HTML + Alpine.js, s
 
 Todas las rutas se resuelven contra `API_BASE_URL` (`http://localhost:8080/api`), definida en `api-client.js`.
 
-> Nota: `admin-usuarios.html` llama actualmente a un endpoint (`/admin/db-permisos/crear-usuario-sistema`) que **no está confirmado en el backend** — pendiente de validar con el equipo de backend antes de documentarlo como funcional.
+> Nota: `admin-usuarios.html` llamaba antes a un endpoint (`/admin/db-permisos/crear-usuario-sistema`) que no existía en el backend. Ya se corrigió: ahora apunta a `POST /admin/usuarios`, que sí está implementado en `AdminUserController` y espera el DTO `CreateUserRequest` (nombres, apellidos, correo, contrasena, fechaNacimiento, idPais, roles, estadoCuenta).
 
 ## Estado conocido / limitaciones
 
