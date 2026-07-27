@@ -11,3 +11,18 @@ informe/*.toc
 informe/*.fls
 informe/*.fdb_latexmk
 informe/*.synctex.gz
+
+# Artefactos de compilación de LaTeX/Beamer (diapositivas/)
+# diapositivas.tex y diapositivas.pdf SÍ se versionan (fuente y evidencia de que compila).
+diapositivas/*.aux
+diapositivas/*.log
+diapositivas/*.out
+diapositivas/*.bbl
+diapositivas/*.blg
+diapositivas/*.toc
+diapositivas/*.nav
+diapositivas/*.snm
+diapositivas/*.vrb
+diapositivas/*.fls
+diapositivas/*.fdb_latexmk
+diapositivas/*.synctex.gz
