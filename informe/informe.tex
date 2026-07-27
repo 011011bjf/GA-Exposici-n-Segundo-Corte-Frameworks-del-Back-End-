@@ -123,35 +123,45 @@ Esta sección documenta, con fragmentos de código extraídos directamente de lo
 
     \item \textbf{Verbo PUT: edición de usuario}\label{step:put}
 
+    \begin{sloppypar}
     Archivo: \texttt{crud-usuarios.html}. La función \texttt{guardarEdicion()} envía la representación completa del recurso editado a \texttt{PUT /admin/usuarios/\{id\}}, consistente con la semántica de reemplazo idempotente de un recurso que define \cite{rfc9110} para el método \texttt{PUT}:
+    \end{sloppypar}
 
     \lstinputlisting[firstline=412,lastline=434,firstnumber=412,caption={\texttt{PUT /admin/usuarios/\{id\}}: edición de usuario (crud-usuarios.html, líneas 412--434)},label={lst:put-usuario}]{../crud-usuarios.html}
 
     \item \textbf{Verbo PATCH: cambio de estado}\label{step:patch}
 
-    Archivo: \texttt{crud-usuarios.html}. A diferencia del \texttt{PUT} anterior, \texttt{cambiarEstado()} solo modifica un atributo puntual del recurso (\texttt{estadoCuenta}), por lo que se usa \texttt{PATCH /admin/usuarios/\{id\}/estado} con un cuerpo mínimo (\texttt{\{ nuevoEstado \}}) en lugar de reenviar el usuario completo:
+    \begin{sloppypar}
+    Archivo: \texttt{crud-usuarios.html}. A diferencia del \texttt{PUT} anterior, \texttt{cambiarEstado()} solo modifica un atributo puntual del recurso (\texttt{estadoCuenta}), por lo que se usa \texttt{PATCH /admin/usuarios/\{id\}/estado} con un cuerpo mínimo (\texttt{\{ estadoCuenta: boolean \}}) en lugar de reenviar el usuario completo:
+    \end{sloppypar}
 
-    \lstinputlisting[firstline=436,lastline=452,firstnumber=436,caption={\texttt{PATCH /admin/usuarios/\{id\}/estado}: cambio de estado (crud-usuarios.html, líneas 436--452)},label={lst:patch-estado}]{../crud-usuarios.html}
+    \lstinputlisting[firstline=436,lastline=453,firstnumber=436,caption={\texttt{PATCH /admin/usuarios/\{id\}/estado}: cambio de estado (crud-usuarios.html, líneas 436--453)},label={lst:patch-estado}]{../crud-usuarios.html}
 
     \item \textbf{Verbo DELETE: eliminación y revocación de sesiones}\label{step:delete}
 
     Archivo: \texttt{crud-usuarios.html}. Existen dos operaciones \texttt{DELETE} distintas: \texttt{revocarSesiones()} invalida todas las sesiones activas de un usuario (\texttt{DELETE /admin/usuarios/\{id\}/sesiones}) sin eliminar la cuenta, y \texttt{eliminarUsuario()} da de baja lógicamente al usuario (\texttt{DELETE /admin/usuarios/\{id\}}). Ambas confirman la acción con el usuario antes de ejecutarla (\texttt{confirm(...)}), dado que \texttt{DELETE} es una operación destructiva según \cite{rfc9110}:
 
-    \lstinputlisting[firstline=454,lastline=485,firstnumber=454,caption={\texttt{DELETE /admin/usuarios/\{id\}/sesiones} y \texttt{DELETE /admin/usuarios/\{id\}} (crud-usuarios.html, líneas 454--485)},label={lst:delete-usuario}]{../crud-usuarios.html}
+    \lstinputlisting[firstline=455,lastline=486,firstnumber=455,caption={\texttt{DELETE /admin/usuarios/\{id\}/sesiones} y \texttt{DELETE /admin/usuarios/\{id\}} (crud-usuarios.html, líneas 455--486)},label={lst:delete-usuario}]{../crud-usuarios.html}
 
     \item \textbf{Manejo de JSON: serialización y parseo}\label{step:json}
 
+    \begin{sloppypar}
     En todos los pasos anteriores se repite el mismo patrón de serialización descrito en \cite{rfc8259}: el cuerpo saliente se construye con \texttt{JSON.stringify(...)} (ver Listados~\ref{lst:login-post}, \ref{lst:put-usuario} y \ref{lst:patch-estado}), y la respuesta entrante se parsea de forma asíncrona con \texttt{await response.json()} antes de leer cualquiera de sus campos (ver Listados~\ref{lst:get-usuarios} y \ref{lst:requiere2fa}). El header \texttt{Content-Type: application/json} fijado por \texttt{fetchWithAuth()} (Listado~\ref{lst:fetch-with-auth}) le indica al backend cómo interpretar ese cuerpo, y el header \texttt{Accept: application/json} le indica en qué formato se espera la respuesta.
+    \end{sloppypar}
 
     \item \textbf{Autenticación avanzada: verificación 2FA}\label{step:2fa}
 
+    \begin{sloppypar}
     Archivo: \texttt{login.html}. Cuando el login detecta \texttt{requiere2fa: true} (Listado~\ref{lst:requiere2fa}), se muestra un segundo formulario que pide un código de 6 dígitos. Al enviarlo, \texttt{submitCodigo2FA()} llama a \texttt{POST /auth/2fa/verify} con el correo ya capturado y el código ingresado; esa segunda respuesta sí trae el \texttt{accessToken} completo (token portador según \cite{rfc7519}), y a partir de ahí el flujo termina exactamente igual que un login sin 2FA: se guarda el token y se redirige al panel:
+    \end{sloppypar}
 
     \lstinputlisting[firstline=315,lastline=355,firstnumber=315,caption={\texttt{POST /auth/2fa/verify}: verificación del código y finalización del login (login.html, líneas 315--355)},label={lst:2fa-verify}]{../login.html}
 
     \item \textbf{Manejo de errores}\label{step:errores}
 
+    \begin{sloppypar}
     El manejo de errores ocurre en dos niveles. A nivel de transporte, \texttt{fetchWithAuth()} intercepta cualquier respuesta con código \texttt{401} (no autorizado, según \cite{rfc9110}): limpia el token guardado y redirige a \texttt{login.html}, salvo que ya se encuentre en esa página, evitando así dejar al usuario con un token inválido en \texttt{localStorage} --- una práctica alineada con el control de gestión de sesiones que recomienda \cite{owasp2021}:
+    \end{sloppypar}
 
     \lstinputlisting[firstline=35,lastline=42,firstnumber=35,caption={Interceptor de \texttt{401} en \texttt{fetchWithAuth()} (api-client.js, líneas 35--42)},label={lst:401-handler}]{../api-client.js}
 
@@ -165,7 +175,9 @@ Esta sección documenta, con fragmentos de código extraídos directamente de lo
 
 A nivel de frontend, se logró implementar un flujo de autenticación completo, incluyendo la verificación en dos factores cuando el backend la exige (Paso~\ref{step:2fa}), y un CRUD de usuarios que cubre los cuatro verbos HTTP principales --- \texttt{GET} paginado, \texttt{PUT} de edición, \texttt{PATCH} de cambio de estado y \texttt{DELETE} de eliminación/revocación de sesiones (Pasos~\ref{step:get} a \ref{step:delete}) ---, todo ello con un manejo centralizado de errores de autorización: cualquier respuesta \texttt{401} limpia el token guardado y redirige al login (Paso~\ref{step:errores}), evitando que la interfaz quede en un estado inconsistente con credenciales inválidas.
 
-La prueba end-to-end contra el backend real \textbf{sí se realizó}: con los tres contenedores de Docker (backend, PostgreSQL, Redis) corriendo en estado \texttt{healthy}, se ejecutaron peticiones reales --- petición y respuesta completas documentadas en la carpeta \texttt{evidencia/} del repositorio --- contra \texttt{POST /auth/registro} (\texttt{201 Created}), \texttt{POST /auth/login} (\texttt{200 OK}, \texttt{requiere2fa: false}) y los cuatro verbos de \texttt{/admin/usuarios} (\texttt{GET}, \texttt{PUT}, \texttt{PATCH}, \texttt{POST}). Esta última parte dejó una limitación parcial, no total: como el registro público solo permite el rol \texttt{CLIENTE} y no se dispone de la contraseña en texto plano del usuario semilla \texttt{admin@artisync.com} (solo su hash en la migración Flyway), las cuatro operaciones administrativas devolvieron consistentemente \texttt{403 Forbidden} --- una respuesta correcta del control de acceso del backend, no un fallo del frontend. La prueba se repitió además desde un navegador real (Chromium automatizado con Playwright), capturando el tráfico de red completo en formato HAR, con el mismo resultado. De paso, esta ronda confirmó que la corrección de \texttt{/admin/db-permisos/crear-usuario-sistema} a \texttt{POST /admin/usuarios} sí llegó a un endpoint real (la respuesta pasó de \texttt{404} a \texttt{403}), y reveló un segundo defecto de contrato, no relacionado, en \texttt{crud-usuarios.html}: el cambio de estado envía el campo \texttt{nuevoEstado} como texto cuando el backend espera \texttt{estadoCuenta} como booleano. Este trabajo extiende el Primer Corte al añadir y verificar la capa de consumo sobre el backend ya construido, y deja como trabajo futuro corregir ese payload de \texttt{PATCH .../estado} y repetir la prueba administrativa completa una vez se cuente con credenciales reales de un usuario \texttt{ADMIN}. Por último, en línea con lo declarado en la Introducción, este equipo utilizó asistencia de inteligencia artificial como herramienta de apoyo durante el desarrollo del frontend y la redacción de este informe, bajo supervisión y verificación humana de cada fragmento de código y cada afirmación técnica presentada.
+\begin{sloppypar}
+La prueba end-to-end contra el backend real \textbf{sí se realizó}: con los tres contenedores de Docker (backend, PostgreSQL, Redis) corriendo en estado \texttt{healthy}, se ejecutaron peticiones reales --- petición y respuesta completas documentadas en la carpeta \texttt{evidencia/} del repositorio --- contra \texttt{POST /auth/registro} (\texttt{201 Created}), \texttt{POST /auth/login} (\texttt{200 OK}, \texttt{requiere2fa: false}) y los cuatro verbos de \texttt{/admin/usuarios} (\texttt{GET}, \texttt{PUT}, \texttt{PATCH}, \texttt{POST}). Esta última parte dejó una limitación parcial, no total: como el registro público solo permite el rol \texttt{CLIENTE} y no se dispone de la contraseña en texto plano del usuario semilla \texttt{admin@artisync.com} (solo su hash en la migración Flyway), las cuatro operaciones administrativas devolvieron consistentemente \texttt{403 Forbidden} --- una respuesta correcta del control de acceso del backend, no un fallo del frontend. La prueba se repitió además desde un navegador real (Chromium automatizado con Playwright), capturando el tráfico de red completo en formato HAR, con el mismo resultado. De paso, esta ronda confirmó que la corrección de \texttt{/admin/db-permisos/crear-usuario-sistema} a \texttt{POST /admin/usuarios} sí llegó a un endpoint real (la respuesta pasó de \texttt{404} a \texttt{403}), y reveló --- y ya corrigió --- un segundo defecto de contrato, no relacionado, en \texttt{crud-usuarios.html}: el cambio de estado enviaba el campo \texttt{nuevoEstado} como texto cuando el backend espera \texttt{estadoCuenta} como booleano; tras el fix, la reprueba contra el backend real confirmó que el \texttt{403} pasó a ser el único bloqueo, igual que en los demás endpoints administrativos. Este trabajo extiende el Primer Corte al añadir y verificar la capa de consumo sobre el backend ya construido, y deja como trabajo futuro repetir la prueba administrativa completa una vez se cuente con credenciales reales de un usuario \texttt{ADMIN}. Por último, en línea con lo declarado en la Introducción, este equipo utilizó asistencia de inteligencia artificial como herramienta de apoyo durante el desarrollo del frontend y la redacción de este informe, bajo supervisión y verificación humana de cada fragmento de código y cada afirmación técnica presentada.
+\end{sloppypar}
 
 % ============================================================
 % REFERENCIAS
