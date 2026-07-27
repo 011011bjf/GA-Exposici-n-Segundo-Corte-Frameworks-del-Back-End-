@@ -1,0 +1,51 @@
+{
+  "descripcion": "Evidencia real de consumo REST: POST /api/auth/registro contra backend Spring Boot corriendo en Docker (docker compose, contenedores healthy).",
+  "fecha_captura": "2026-07-27T22:30:34Z",
+  "herramienta": "curl -i (petición y respuesta reales, sin editar)",
+  "request": {
+    "method": "POST",
+    "url": "http://localhost:8080/api/auth/registro",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "body": {
+      "nombres": "Eduardo",
+      "apellidos": "Reinoso Prueba",
+      "correo": "test.eval@uteq.edu.ec",
+      "contrasena": "TestEval2026",
+      "fechaNacimiento": "2000-05-15",
+      "rol": "CLIENTE",
+      "aceptaTerminos": true
+    }
+  },
+  "response": {
+    "status": 201,
+    "statusText": "Created",
+    "headers": {
+      "Content-Type": "application/json",
+      "X-Content-Type-Options": "nosniff",
+      "X-XSS-Protection": "0",
+      "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate",
+      "X-Frame-Options": "DENY",
+      "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+      "Date": "Mon, 27 Jul 2026 22:30:34 GMT"
+    },
+    "body": {
+      "idUsuario": 2,
+      "nombres": "Eduardo",
+      "apellidos": "Reinoso Prueba",
+      "correo": "test.eval@uteq.edu.ec",
+      "fechaNacimiento": "2000-05-15",
+      "idPais": null,
+      "nombrePais": null,
+      "fechaRegistro": "2026-07-27T22:30:34.467335",
+      "estadoCuenta": true,
+      "roles": ["CLIENTE"],
+      "permisos": null,
+      "dosFactoresHabilitado": false
+    }
+  }
+}
