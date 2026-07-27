@@ -62,35 +62,46 @@
 % 2. CONTEXTO
 % ============================================================
 \begin{frame}{Contexto}
+    \vfill
     \begin{itemize}
         \item \textbf{ArtiSync}: plataforma que conecta clientes y creadores de servicios digitales.
         \item Primer Corte: backend Spring Boot + PostgreSQL, con su API REST.
         \item Este corte agrega un \textbf{frontend AlpineJS} sobre esa API REST \cite{fielding2000}.
         \item Alcance: autenticación (login + 2FA) y CRUD de usuarios.
     \end{itemize}
+    \vfill
 \end{frame}
 
 % ============================================================
 % 3. DIAGRAMA DE FLUJO
 % ============================================================
 \begin{frame}{Flujo general}
+    \vfill
     \centering
-    \resizebox{0.92\linewidth}{!}{%
+    \resizebox{0.98\linewidth}{!}{%
     \begin{tikzpicture}[
-        node distance=1.3cm and 1.6cm,
-        box/.style={draw, rounded corners, minimum width=3.1cm, minimum height=1.2cm, align=center, font=\small}
+        node distance=1.8cm and 2.2cm,
+        box/.style={draw, thick, rounded corners, minimum width=3.6cm, minimum height=1.6cm, align=center, font=\normalsize}
     ]
         \node[box] (cliente) {Cliente\\AlpineJS};
         \node[box, right=of cliente] (backend) {Backend\\Spring Boot (REST)};
         \node[box, right=of backend] (bd) {Base de\\Datos};
 
-        \draw[-{Stealth}] ([yshift=3pt]cliente.east) -- node[above, font=\tiny]{JSON / HTTP} ([yshift=3pt]backend.west);
-        \draw[-{Stealth}] ([yshift=-3pt]backend.west) -- node[below, font=\tiny]{respuesta} ([yshift=-3pt]cliente.east);
+        \draw[-{Stealth}, thick] ([yshift=4pt]cliente.east) -- node[above, font=\small]{JSON / HTTP} ([yshift=4pt]backend.west);
+        \draw[-{Stealth}, thick] ([yshift=-4pt]backend.west) -- node[below, font=\small]{respuesta} ([yshift=-4pt]cliente.east);
 
-        \draw[-{Stealth}] ([yshift=3pt]backend.east) -- ([yshift=3pt]bd.west);
-        \draw[-{Stealth}] ([yshift=-3pt]bd.west) -- ([yshift=-3pt]backend.east);
+        \draw[-{Stealth}, thick] ([yshift=4pt]backend.east) -- ([yshift=4pt]bd.west);
+        \draw[-{Stealth}, thick] ([yshift=-4pt]bd.west) -- ([yshift=-4pt]backend.east);
     \end{tikzpicture}%
     }
+
+    \vspace{16pt}
+    \begin{itemize}
+        \item Cliente envía la petición HTTP con JSON.
+        \item Backend valida el JWT y procesa la lógica de negocio.
+        \item Backend persiste o consulta datos en PostgreSQL.
+    \end{itemize}
+    \vfill
 \end{frame}
 
 % ============================================================
@@ -110,11 +121,14 @@
 % 5. CRUD DE USUARIOS
 % ============================================================
 \begin{frame}{CRUD de usuarios}
+    \vfill
     \begin{itemize}
         \item Cuatro verbos HTTP \cite{rfc9110} sobre el recurso \texttt{usuarios}.
     \end{itemize}
-    \vspace{6pt}
-    \centering
+    \vspace{12pt}
+    \begin{center}
+    \renewcommand{\arraystretch}{1.6}
+    \large
     \begin{tabular}{ll}
         \hline
         \textbf{Verbo} & \textbf{Endpoint} \\
@@ -125,17 +139,26 @@
         DELETE & \texttt{/admin/usuarios/\{id\}} (+ \texttt{/sesiones}) \\
         \hline
     \end{tabular}
+    \end{center}
+    \vspace{12pt}
+    \begin{itemize}
+        \item Todas pasan por \texttt{fetchWithAuth()}, que agrega el token automáticamente.
+    \end{itemize}
+    \vfill
 \end{frame}
 
 % ============================================================
 % 6. MANEJO DE ERRORES
 % ============================================================
 \begin{frame}{Manejo de errores}
+    \vfill
     \begin{itemize}
         \item \texttt{fetchWithAuth()} centraliza la detección de sesiones inválidas.
         \item Respuesta \texttt{401} \(\Rightarrow\) se limpia el token de \texttt{localStorage}.
         \item Redirección automática a \texttt{login.html} (salvo que ya esté ahí).
+        \item A nivel de formulario, los mensajes de error se toman de \texttt{data.message} enviado por el propio backend.
     \end{itemize}
+    \vfill
 \end{frame}
 
 % ============================================================
@@ -145,7 +168,7 @@
     \begin{itemize}
         \item Login con 2FA y CRUD completo, funcionando a nivel de frontend.
         \item Prueba end-to-end real (Docker): registro y login exitosos; CRUD admin con 403 esperado (falta rol ADMIN real).
-        \item Diseño de esta presentación: texto mínimo y apoyo visual \cite{alley2013, mayer2009}.
+        \item Documentación reproducible: cada paso quedó respaldado con evidencia real contra el backend en ejecución.\footnote{\scriptsize Diseño de diapositivas inspirado en \cite{alley2013} y \cite{mayer2009}.}
     \end{itemize}
     \vspace{10pt}
     \begin{center}
