@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="oscuro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTISYNC - Registro de Usuario</title>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --input-bg: #ffffff;
+        }
+
+        [data-theme="oscuro"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --border: #334155;
+            --danger: #f87171;
+            --success: #4ade80;
+            --input-bg: #0f172a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        [x-cloak] { display: none !important; }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="date"] {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--input-bg);
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .row > .form-group {
+            flex: 1;
+        }
+
+        .roles-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .role-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .role-option input[type="radio"] {
+            display: none;
+        }
+
+        .role-option label {
+            display: block;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .role-option input[type="radio"]:checked + label {
+            border-color: var(--primary);
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-top: 4px;
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        button.btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button.btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        button.btn-primary:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .validation-hint {
+            font-size: 0.8rem;
+            color: var(--danger);
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Clases extraídas de estilos en línea */
+        .alert-success-flex { flex-direction: column; align-items: flex-start; }
+        .success-message-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .token-input { width: 100%; padding: 8px; font-family: monospace; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--success); background: transparent; color: var(--success); border-radius: 4px; }
+        .link-primary { color: var(--primary); }
+    </style>
+</head>
+<body x-data="temaGlobal()">
+    <button class="theme-toggle" @click="toggleTema()" x-text="tema === 'oscuro' ? ' Claro' : ' Oscuro'"></button>
+
+    <div class="container" x-data="registroForm()">
+        <div class="card">
+            <div class="header">
+                <h1>ARTISYNC</h1>
+                <p>Crea tu cuenta para comenzar</p>
+            </div>
+
+            <!-- Mensajes de Error / Éxito -->
+            <div x-show="error" class="alert alert-error" x-cloak x-transition>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span x-text="error"></span>
+            </div>
+
+            <div x-show="success" class="alert alert-success alert-success-flex" x-cloak x-transition>
+                <div class="success-message-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>¡Registro exitoso! Aquí tienes tu Token (cópialo para usarlo en el admin):</span>
+                </div>
+                <input type="text" readonly :value="tokenObtenido" x-show="tokenObtenido" class="token-input" @click="$el.select(); document.execCommand('copy'); alert('Token copiado!')" title="Click para copiar">
+            </div>
+
+            <form @submit.prevent="submitForm" x-show="!success">
+                <div class="row">
+                    <div class="form-group">
+                        <label for="nombres">Nombres</label>
+                        <input type="text" id="nombres" x-model="form.nombres" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellidos">Apellidos</label>
+                        <input type="text" id="apellidos" x-model="form.apellidos" required maxlength="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" x-model="form.correo" required maxlength="150">
+                </div>
+
+                <div class="form-group">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" x-model="form.contrasena" required minlength="8">
+                    <span class="validation-hint" x-show="form.contrasena.length > 0 && !contrasenaFuerte" x-cloak>
+                        Debe contener al menos 8 caracteres, un número, una mayúscula y una minúscula.
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaNacimiento">Fecha de Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" x-model="form.fechaNacimiento" required>
+                    <span class="validation-hint" x-show="form.fechaNacimiento && !esMayorDeEdad" x-cloak>
+                        Debes tener al menos 18 años para registrarte en ARTISYNC (RNF-12).
+                    </span>
+                </div>
+
+                <div class="form-group">
+                    <label>¿Qué deseas hacer en Artisync?</label>
+                    <div class="roles-group">
+                        <div class="role-option">
+                            <input type="radio" id="rol-cliente" value="CLIENTE" x-model="form.rol">
+                            <label for="rol-cliente">Comprar Servicios</label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="rol-creador" value="CREADOR" x-model="form.rol">
+                            <label for="rol-creador">Ofrecer Servicios</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terminos" x-model="form.aceptaTerminos" required>
+                    <label for="terminos">
+                        He leído y acepto los <a href="#" class="link-primary">Términos de Servicio</a> y la Política de Privacidad de Artisync.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary" :disabled="!esValido || cargando">
+                    <span x-show="!cargando">Crear Cuenta</span>
+                    <span x-show="cargando">Procesando...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Controlador Global del Tema
+        function temaGlobal() {
+            return {
+                tema: localStorage.getItem('tema') || 'oscuro',
+                init() {
+                    document.documentElement.setAttribute('data-theme', this.tema);
+                },
+                toggleTema() {
+                    this.tema = this.tema === 'oscuro' ? 'claro' : 'oscuro';
+                    document.documentElement.setAttribute('data-theme', this.tema);
+                    localStorage.setItem('tema', this.tema);
+                }
+            }
+        }
+
+        // Controlador del Formulario de Registro
+        function registroForm() {
+            return {
+                form: {
+                    nombres: '',
+                    apellidos: '',
+                    correo: '',
+                    contrasena: '',
+                    fechaNacimiento: '',
+                    rol: 'CLIENTE',
+                    aceptaTerminos: false
+                },
+                cargando: false,
+                error: null,
+                success: false,
+                tokenObtenido: '',
+
+                // Validación RNF-12: Mayor de edad
+                get esMayorDeEdad() {
+                    if (!this.form.fechaNacimiento) return false;
+                    const hoy = new Date();
+                    const fechaNac = new Date(this.form.fechaNacimiento);
+                    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+                    const mes = hoy.getMonth() - fechaNac.getMonth();
+                    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+                        edad--;
+                    }
+                    return edad >= 18;
+                },
+
+                // Validación de política de contraseña (Backend config)
+                get contrasenaFuerte() {
+                    const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+                    return regex.test(this.form.contrasena);
+                },
+
+                // Validación global para habilitar el botón
+                get esValido() {
+                    return this.form.nombres.length > 0 &&
+                           this.form.apellidos.length > 0 &&
+                           this.form.correo.includes('@') &&
+                           this.contrasenaFuerte &&
+                           this.esMayorDeEdad &&
+                           this.form.aceptaTerminos;
+                },
+
+                async submitForm() {
+                    this.error = null;
+                    this.cargando = true;
+
+                    try {
+                        const response = await fetch('http://localhost:8080/api/auth/registro', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(this.form)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            // Captura de errores 400 (ej. Correo ya registrado, Errores de validación)
+                            if (data.message) {
+                                throw new Error(data.message);
+                            } else if (data.error) {
+                                throw new Error(data.error);
+                            }
+                            throw new Error('Ha ocurrido un error en el servidor al registrarse');
+                        }
+
+                        // Intentar hacer login automáticamente para obtener el token
+                        try {
+                            const loginResponse = await fetch('http://localhost:8080/api/auth/login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ correo: this.form.correo, contrasena: this.form.contrasena })
+                            });
+                            
+                            if (loginResponse.ok) {
+                                const loginData = await loginResponse.json();
+                                if (loginData.accessToken) {
+                                    this.tokenObtenido = loginData.accessToken;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error auto-login:', e);
+                        }
+
+                        // Éxito
+                        this.success = true;
+
+                    } catch (err) {
+                        this.error = err.message;
+                    } finally {
+                        this.cargando = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

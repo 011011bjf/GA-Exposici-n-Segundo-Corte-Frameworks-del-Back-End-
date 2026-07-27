@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="oscuro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTISYNC - Iniciar Sesión</title>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="api-client.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --input-bg: #ffffff;
+        }
+
+        [data-theme="oscuro"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --border: #334155;
+            --danger: #f87171;
+            --success: #4ade80;
+            --input-bg: #0f172a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        [x-cloak] { display: none !important; }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--input-bg);
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button.btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        button.btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        button.btn-primary:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .footer-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body x-data="temaGlobal()">
+    <button class="theme-toggle" @click="toggleTema()" x-text="tema === 'oscuro' ? ' Claro' : ' Oscuro'"></button>
+
+    <div class="container" x-data="loginForm()">
+        <div class="card">
+            <div class="header">
+                <h1>ARTISYNC</h1>
+                <p>Inicia sesión en tu cuenta</p>
+            </div>
+
+            <!-- Mensajes de Error / Éxito -->
+            <div x-show="error" class="alert alert-error" x-cloak x-transition>
+                <span x-text="error"></span>
+            </div>
+
+            <div x-show="success" class="alert alert-success" x-cloak x-transition>
+                <span>¡Sesión iniciada! Redirigiendo...</span>
+            </div>
+
+            <form @submit.prevent="submitForm" x-show="!success">
+                <div class="form-group">
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" x-model="form.correo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" x-model="form.contrasena" required>
+                </div>
+
+                <button type="submit" class="btn-primary" :disabled="cargando">
+                    <span x-show="!cargando">Iniciar Sesión</span>
+                    <span x-show="cargando">Comprobando...</span>
+                </button>
+            </form>
+            
+            <a href="registro.html" class="footer-link">¿No tienes cuenta? Regístrate aquí</a>
+        </div>
+    </div>
+
+    <script>
+        // Controlador Global del Tema
+        function temaGlobal() {
+            return {
+                tema: localStorage.getItem('tema') || 'oscuro',
+                init() {
+                    document.documentElement.setAttribute('data-theme', this.tema);
+                },
+                toggleTema() {
+                    this.tema = this.tema === 'oscuro' ? 'claro' : 'oscuro';
+                    document.documentElement.setAttribute('data-theme', this.tema);
+                    localStorage.setItem('tema', this.tema);
+                }
+            }
+        }
+
+        // Controlador del Formulario de Login
+        function loginForm() {
+            return {
+                form: {
+                    correo: '',
+                    contrasena: ''
+                },
+                cargando: false,
+                error: null,
+                success: false,
+
+                async submitForm() {
+                    this.error = null;
+                    this.cargando = true;
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(this.form)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            if (data.message) {
+                                throw new Error(data.message);
+                            }
+                            throw new Error('Credenciales incorrectas o error en el servidor');
+                        }
+
+                        // Guardar el token en el storage
+                        if (data.accessToken) {
+                            authStore.setToken(data.accessToken);
+                        }
+
+                        this.success = true;
+                        
+                        // Redirección al panel
+                        setTimeout(() => {
+                            window.location.href = 'crud-usuarios.html';
+                        }, 1000);
+
+                    } catch (err) {
+                        this.error = err.message;
+                    } finally {
+                        this.cargando = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

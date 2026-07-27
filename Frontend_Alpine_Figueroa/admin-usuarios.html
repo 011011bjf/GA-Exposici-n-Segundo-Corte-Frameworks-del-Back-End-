@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="oscuro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTISYNC - Administración de Usuarios</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="api-client.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --input-bg: #ffffff;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #f8fafc;
+        }
+
+        [data-theme="oscuro"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #8b5cf6;
+            --primary-hover: #a78bfa;
+            --border: #334155;
+            --danger: #f87171;
+            --success: #4ade80;
+            --input-bg: #0f172a;
+            --sidebar-bg: #0b1120;
+            --sidebar-text: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        [x-cloak] { display: none !important; }
+
+        /* Sidebar simple para contexto admin */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 { margin-bottom: 30px; font-size: 1.2rem; color: var(--primary); }
+        .sidebar a {
+            color: var(--sidebar-text); text-decoration: none; padding: 10px;
+            border-radius: 8px; margin-bottom: 5px; opacity: 0.8; transition: 0.2s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            opacity: 1; background-color: rgba(255,255,255,0.1);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 32px;
+            max-width: 700px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 500; }
+        
+        input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid var(--border); background-color: var(--input-bg);
+            color: var(--text); font-size: 0.95rem; transition: 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .row { display: flex; gap: 16px; }
+        .row > .form-group { flex: 1; }
+
+        .checkbox-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px; margin-top: 8px;
+        }
+
+        .check-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px; border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .check-item:hover { border-color: var(--primary); }
+        .check-item input { accent-color: var(--primary); width: 16px; height: 16px; }
+
+        button.btn-primary {
+            padding: 12px 24px; background-color: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: 0.2s; margin-top: 20px;
+        }
+        button.btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
+        button.btn-primary:disabled { background-color: var(--border); cursor: not-allowed; }
+
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; }
+        .alert-error { background-color: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+        .alert-success { background-color: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: var(--success); }
+
+        .theme-toggle {
+            background: var(--card); border: 1px solid var(--border); color: var(--text);
+            padding: 8px 12px; border-radius: 8px; cursor: pointer;
+        }
+
+        /* Clases extraídas de estilos en línea */
+        .header-title { font-size: 1.8rem; margin-bottom: 4px; }
+        .header-subtitle { color: var(--text-muted); }
+        .mt-10 { margin-top: 10px; }
+    </style>
+</head>
+<body x-data="temaGlobal()">
+    <div class="sidebar">
+        <h2>ARTISYNC ADMIN</h2>
+        <a href="crud-usuarios.html">Gestión Usuarios</a>
+        <a href="admin-usuarios.html" class="active">Crear Usuario (BD)</a>
+        <a href="#" class="logout" @click.prevent="authStore.removeToken(); window.location.href='login.html'">Cerrar Sesión</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header-top">
+            <div>
+                <h1 class="header-title">Creación de Usuarios (Sistema BD)</h1>
+                <p class="header-subtitle">Usa el procedimiento almacenado sp_crear_usuario_sistema</p>
+            </div>
+            <button class="theme-toggle" @click="toggleTema()" x-text="tema === 'oscuro' ? ' Claro' : ' Oscuro'"></button>
+        </div>
+
+        <div class="card" x-data="adminForm()">
+            
+            <div x-show="error" class="alert alert-error" x-cloak x-transition>
+                <span x-text="error"></span>
+            </div>
+            
+            <div x-show="success" class="alert alert-success" x-cloak x-transition>
+                <span>¡Usuario creado correctamente vía base de datos!</span>
+            </div>
+
+            <form @submit.prevent="submitForm">
+                <div class="row">
+                    <div class="form-group">
+                        <label>Nombres</label>
+                        <input type="text" x-model="form.nombres" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos</label>
+                        <input type="text" x-model="form.apellidos" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" x-model="form.correo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="text" x-model="form.contrasena" required minlength="8" placeholder="Genera una contraseña fuerte">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Fecha de Nacimiento</label>
+                        <input type="date" x-model="form.fechaNacimiento" required>
+                    </div>
+                    <div class="form-group">
+                        <label>País</label>
+                        <select x-model.number="form.idPais" required>
+                            <option value="">Seleccione un país...</option>
+                            <option value="1">Ecuador</option>
+                            <option value="2">Colombia</option>
+                            <option value="3">Perú</option>
+                            <option value="4">México</option>
+                            <option value="5">Argentina</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group mt-10">
+                    <label>Asignación de Roles (Múltiple)</label>
+                    <div class="checkbox-grid">
+                        <template x-for="rol in rolesDisponibles" :key="rol">
+                            <label class="check-item">
+                                <input type="checkbox" :value="rol" x-model="form.roles">
+                                <span x-text="rol"></span>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" :disabled="cargando">
+                    <span x-show="!cargando">Crear Usuario Vía BD</span>
+                    <span x-show="cargando">Procesando...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function temaGlobal() {
+            return {
+                tema: localStorage.getItem('tema') || 'oscuro',
+                init() { document.documentElement.setAttribute('data-theme', this.tema); },
+                toggleTema() {
+                    this.tema = this.tema === 'oscuro' ? 'claro' : 'oscuro';
+                    document.documentElement.setAttribute('data-theme', this.tema);
+                    localStorage.setItem('tema', this.tema);
+                }
+            }
+        }
+
+        function adminForm() {
+            return {
+                form: {
+                    nombres: '',
+                    apellidos: '',
+                    correo: '',
+                    contrasena: '',
+                    fechaNacimiento: '',
+                    idPais: '',
+                    roles: [] // Array para selección múltiple
+                },
+                rolesDisponibles: ['ADMIN', 'CLIENTE', 'CREADOR', 'SOPORTE', 'AUDITORIA_EXTERNA'],
+                cargando: false,
+                error: null,
+                success: false,
+
+                async submitForm() {
+                    this.error = null;
+                    this.success = false;
+                    this.cargando = true;
+
+                    try {
+                        const response = await fetchWithAuth('/admin/db-permisos/crear-usuario-sistema', {
+                            method: 'POST',
+                            body: JSON.stringify(this.form)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            if (data.message) throw new Error(data.message);
+                            if (data.error) throw new Error(data.error);
+                            throw new Error('Error de servidor');
+                        }
+
+                        this.success = true;
+                        
+                        // Limpiar formulario tras éxito (opcional)
+                        setTimeout(() => {
+                            this.success = false;
+                            this.form.nombres = '';
+                            this.form.apellidos = '';
+                            this.form.correo = '';
+                            this.form.roles = [];
+                        }, 4000);
+
+                    } catch (err) {
+                        this.error = err.message;
+                    } finally {
+                        this.cargando = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

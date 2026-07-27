@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="oscuro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTISYNC - CRUD Usuarios</title>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- jsPDF & AutoTable para exportar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="api-client.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #f8fafc;
+            --table-header: #f1f5f9;
+        }
+
+        [data-theme="oscuro"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #8b5cf6;
+            --primary-hover: #a78bfa;
+            --border: #334155;
+            --danger: #f87171;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --sidebar-bg: #0b1120;
+            --sidebar-text: #f8fafc;
+            --table-header: #1e293b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        [x-cloak] { display: none !important; }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 { margin-bottom: 30px; font-size: 1.2rem; color: var(--primary); }
+        .sidebar a {
+            color: var(--sidebar-text); text-decoration: none; padding: 10px;
+            border-radius: 8px; margin-bottom: 5px; opacity: 0.8; transition: 0.2s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            opacity: 1; background-color: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .logout {
+            margin-top: auto;
+            color: var(--danger);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--table-header);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+        
+        td {
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-ACTIVO { background-color: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-SUSPENDIDO { background-color: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-ELIMINADO { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        
+        .role-badge {
+            background-color: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            margin-right: 4px;
+            border: 1px solid var(--primary);
+        }
+
+        .btn {
+            padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;
+        }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        
+        .btn-danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-danger:hover { background-color: var(--danger); color: white; }
+
+        .btn-warning { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+        .btn-warning:hover { background-color: var(--warning); color: white; }
+
+        .pagination {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+        }
+
+        .theme-toggle {
+            background: var(--card); border: 1px solid var(--border); color: var(--text);
+            padding: 8px 12px; border-radius: 8px; cursor: pointer;
+        }
+
+        /* Clases extraídas de estilos en línea */
+        .header-title { font-size: 1.8rem; margin-bottom: 4px; }
+        .header-subtitle { color: var(--text-muted); }
+        .actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .actions-group { display: flex; gap: 10px; }
+        .user-name { font-weight: 500; }
+        .table-actions { display: flex; gap: 8px; }
+        .table-empty { text-align: center; padding: 20px; color: var(--text-muted); }
+        .pagination-info { font-size: 0.9rem; color: var(--text-muted); }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; align-items: center;
+            justify-content: center; z-index: 1000;
+        }
+        .modal-content { width: 400px; max-width: 90%; }
+        .modal-title { margin-bottom: 15px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group-large { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-input {
+            width: 100%; padding: 8px; border-radius: 6px;
+            border: 1px solid var(--border); background: var(--bg); color: var(--text);
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-primary { background-color: var(--primary); color: white; border: none; }
+        .btn-primary:hover { background-color: var(--primary-hover); color: white; }
+        .btn-flex { flex: 1; text-align: center; justify-content: center; display: flex; align-items: center; }
+    </style>
+</head>
+<body x-data="temaGlobal()">
+    <div class="sidebar">
+        <h2>ARTISYNC ADMIN</h2>
+        <a href="crud-usuarios.html" class="active">Gestión Usuarios</a>
+        <a href="admin-usuarios.html">Crear Usuario (BD)</a>
+        <a href="#" class="logout" @click.prevent="authStore.removeToken(); window.location.href='login.html'">Cerrar Sesión</a>
+    </div>
+
+    <div class="main-content" x-data="crudUsuarios()">
+        <div class="header-top">
+            <div>
+                <h1 class="header-title">CRUD de Usuarios</h1>
+                <p class="header-subtitle">Administra todos los usuarios del sistema</p>
+            </div>
+            <button class="theme-toggle" @click="toggleTema()" x-text="tema === 'oscuro' ? ' Claro' : ' Oscuro'"></button>
+        </div>
+
+        <div class="card">
+            
+            <div class="actions-header">
+                <h3>Lista de Usuarios</h3>
+                <div class="actions-group">
+                    <button class="btn btn-outline" @click="exportarPDF()" :disabled="cargando">📄 Exportar PDF</button>
+                    <button class="btn btn-outline" @click="cargarUsuarios()" :disabled="cargando">🔄 Recargar</button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombres</th>
+                        <th>Correo</th>
+                        <th>Roles</th>
+                        <th>Estado</th>
+                        <th>Acciones Rápidas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="user in usuarios" :key="user.idUsuario">
+                        <tr>
+                            <td x-text="user.idUsuario"></td>
+                            <td>
+                                <div class="user-name" x-text="user.nombres + ' ' + user.apellidos"></div>
+                            </td>
+                            <td x-text="user.correo"></td>
+                            <td>
+                                <template x-for="rol in user.roles">
+                                    <span class="role-badge" x-text="rol"></span>
+                                </template>
+                            </td>
+                            <td>
+                                <span :class="'badge badge-' + user.estadoCuenta" x-text="user.estadoCuenta"></span>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <button class="btn btn-outline" @click="abrirEdicion(user)" title="Modificar usuario">Modificar</button>
+                                    <button class="btn btn-warning" @click="cambiarEstado(user.idUsuario, user.estadoCuenta === 'ACTIVO' ? 'SUSPENDIDO' : 'ACTIVO')" title="Suspender/Activar">
+                                        <span x-text="user.estadoCuenta === 'ACTIVO' ? 'Suspender' : 'Activar'"></span>
+                                    </button>
+                                    <button class="btn btn-warning" @click="revocarSesiones(user.idUsuario)" title="Revocar sesiones activas">Revocar</button>
+                                    <button class="btn btn-danger" @click="eliminarUsuario(user.idUsuario)" title="Eliminar logicamente">Eliminar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="usuarios.length === 0 && !cargando">
+                        <td colspan="6" class="table-empty">No hay usuarios encontrados.</td>
+                    </tr>
+                    <tr x-show="cargando">
+                        <td colspan="6" class="table-empty">Cargando...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <button class="btn btn-outline" :disabled="page === 0 || cargando" @click="page--; cargarUsuarios()">Anterior</button>
+                <span class="pagination-info">Página <span x-text="page + 1"></span> de <span x-text="totalPages"></span></span>
+                <button class="btn btn-outline" :disabled="page >= totalPages - 1 || cargando" @click="page++; cargarUsuarios()">Siguiente</button>
+            </div>
+        </div>
+
+        <!-- Modal Edición -->
+        <div x-show="modalAbierto" class="modal-overlay" x-cloak>
+            <div class="card modal-content" @click.away="modalAbierto = false">
+                <h3 class="modal-title">Modificar Usuario</h3>
+                <form @submit.prevent="guardarEdicion()">
+                    <div class="form-group">
+                        <label class="form-label">Nombres</label>
+                        <input type="text" x-model="formEdit.nombres" class="form-input" required>
+                    </div>
+                    <div class="form-group-large">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text" x-model="formEdit.apellidos" class="form-input" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary btn-flex">Guardar Cambios</button>
+                        <button type="button" class="btn btn-outline btn-flex" @click="modalAbierto = false">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function temaGlobal() {
+            return {
+                tema: localStorage.getItem('tema') || 'oscuro',
+                init() { document.documentElement.setAttribute('data-theme', this.tema); },
+                toggleTema() {
+                    this.tema = this.tema === 'oscuro' ? 'claro' : 'oscuro';
+                    document.documentElement.setAttribute('data-theme', this.tema);
+                    localStorage.setItem('tema', this.tema);
+                }
+            }
+        }
+
+        function crudUsuarios() {
+            return {
+                usuarios: [],
+                page: 0,
+                size: 10,
+                totalPages: 1,
+                cargando: false,
+                modalAbierto: false,
+                formEdit: {
+                    id: null,
+                    nombres: '',
+                    apellidos: ''
+                },
+
+                init() {
+                    this.cargarUsuarios();
+                },
+
+                async cargarUsuarios() {
+                    this.cargando = true;
+                    try {
+                        const res = await fetchWithAuth(`/admin/usuarios?page=${this.page}&size=${this.size}&sortBy=idUsuario&direction=desc`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.usuarios = data.content;
+                            this.totalPages = data.totalPages || 1;
+                        } else {
+                            console.error('Error cargando usuarios', await res.text());
+                        }
+                    } catch (e) {
+                        console.error('Network error', e);
+                    } finally {
+                        this.cargando = false;
+                    }
+                },
+
+                abrirEdicion(user) {
+                    this.formEdit.id = user.idUsuario;
+                    this.formEdit.nombres = user.nombres;
+                    this.formEdit.apellidos = user.apellidos;
+                    this.formEdit.roles = user.roles;
+                    this.formEdit.estadoCuenta = user.estadoCuenta === 'ACTIVO';
+                    this.modalAbierto = true;
+                },
+
+                async exportarPDF() {
+                    this.cargando = true;
+                    try {
+                        const res = await fetchWithAuth(`/admin/usuarios?page=0&size=1000&sortBy=idUsuario&direction=asc`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            const usuariosExport = data.content;
+                            
+                            if (usuariosExport.length === 0) {
+                                alert('No hay datos para exportar.');
+                                return;
+                            }
+
+                            // Inicializar jsPDF
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF('landscape'); // Horizontal para que quepan las columnas
+                            
+                            doc.setFontSize(16);
+                            doc.text("Reporte de Usuarios - ARTISYNC", 14, 15);
+                            doc.setFontSize(10);
+                            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 22);
+                            
+                            const cabeceras = [['ID', 'Nombres', 'Apellidos', 'Correo', 'Estado', 'Roles']];
+                            const filas = usuariosExport.map(u => [
+                                u.idUsuario,
+                                u.nombres || '',
+                                u.apellidos || '',
+                                u.correo || '',
+                                u.estadoCuenta,
+                                (u.roles || []).join(', ')
+                            ]);
+
+                            // Generar tabla
+                            doc.autoTable({
+                                startY: 28,
+                                head: cabeceras,
+                                body: filas,
+                                theme: 'striped',
+                                headStyles: { fillColor: [139, 92, 246] } // Color primary (morado de artisync)
+                            });
+
+                            // Descargar PDF
+                            doc.save(`reporte_usuarios_${new Date().toISOString().split('T')[0]}.pdf`);
+
+                        } else {
+                            alert('Error obteniendo datos para exportar a PDF.');
+                        }
+                    } catch (e) {
+                        alert('Error de red al exportar a PDF.');
+                    } finally {
+                        this.cargando = false;
+                    }
+                },
+
+                async guardarEdicion() {
+                    try {
+                        const payload = {
+                            nombres: this.formEdit.nombres,
+                            apellidos: this.formEdit.apellidos,
+                            estadoCuenta: this.formEdit.estadoCuenta,
+                            roles: this.formEdit.roles
+                        };
+                        const res = await fetchWithAuth(`/admin/usuarios/${this.formEdit.id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(payload)
+                        });
+                        if (res.ok) {
+                            alert('Usuario modificado con éxito');
+                            this.modalAbierto = false;
+                            this.cargarUsuarios();
+                        } else {
+                            alert('Error modificando usuario: ' + (await res.text()));
+                        }
+                    } catch (e) {
+                        alert('Error de red');
+                    }
+                },
+
+                async cambiarEstado(id, nuevoEstado) {
+                    if (!confirm(`¿Estás seguro de cambiar el estado a ${nuevoEstado}?`)) return;
+                    try {
+                        const res = await fetchWithAuth(`/admin/usuarios/${id}/estado`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ nuevoEstado })
+                        });
+                        if (res.ok) {
+                            alert('Estado cambiado con éxito');
+                            this.cargarUsuarios();
+                        } else {
+                            alert('Error cambiando estado: ' + (await res.text()));
+                        }
+                    } catch (e) {
+                        alert('Error de red');
+                    }
+                },
+
+                async revocarSesiones(id) {
+                    if (!confirm('¿Revocar todas las sesiones de este usuario? Perderá el acceso de inmediato.')) return;
+                    try {
+                        const res = await fetchWithAuth(`/admin/usuarios/${id}/sesiones`, {
+                            method: 'DELETE'
+                        });
+                        if (res.ok) {
+                            alert('Sesiones revocadas.');
+                        } else {
+                            alert('Error revocando sesiones.');
+                        }
+                    } catch (e) {
+                        alert('Error de red');
+                    }
+                },
+
+                async eliminarUsuario(id) {
+                    if (!confirm('¿Seguro que deseas eliminar a este usuario de forma lógica?')) return;
+                    try {
+                        const res = await fetchWithAuth(`/admin/usuarios/${id}`, {
+                            method: 'DELETE'
+                        });
+                        if (res.ok) {
+                            alert('Usuario eliminado correctamente.');
+                            this.cargarUsuarios();
+                        } else {
+                            alert('Error eliminando usuario.');
+                        }
+                    } catch (e) {
+                        alert('Error de red');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
