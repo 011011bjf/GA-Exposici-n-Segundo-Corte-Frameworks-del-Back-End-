@@ -1,0 +1,13 @@
+# Artefactos de compilación de LaTeX (informe/)
+# informe.tex y referencias.bib SÍ se versionan (son la fuente).
+# informe.pdf SÍ se versiona a propósito: se conserva como evidencia de que el informe compila,
+# no como fuente de verdad (la fuente de verdad es informe.tex + referencias.bib).
+informe/*.aux
+informe/*.log
+informe/*.out
+informe/*.bbl
+informe/*.blg
+informe/*.toc
+informe/*.fls
+informe/*.fdb_latexmk
+informe/*.synctex.gz
