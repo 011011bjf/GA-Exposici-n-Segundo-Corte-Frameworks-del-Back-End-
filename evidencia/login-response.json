@@ -19,7 +19,7 @@
     "status": 200,
     "statusText": "OK",
     "headers": {
-      "Set-Cookie": "refreshToken=eyJhbGciOiJIUzUxMiJ9.eyJ0eXBlIjoicmVmcmVzaCI...[TRUNCADO por seguridad, JWT real de 271 caracteres, valido 7 dias]; Path=/api/auth; Max-Age=604800; HttpOnly; SameSite=Strict",
+      "Set-Cookie": "refreshToken=eyJhbGciOiJIUzUxMiJ9.eyJ0eXBlIjoicmVmcmVzaCI...[TRUNCADO por seguridad, JWT real de 294 caracteres, valido 7 dias]; Path=/api/auth; Max-Age=604800; HttpOnly; SameSite=Strict",
       "Content-Type": "application/json",
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
