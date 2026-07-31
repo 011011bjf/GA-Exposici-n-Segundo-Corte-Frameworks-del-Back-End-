@@ -28,5 +28,36 @@
       "fieldErrors": null
     }
   },
-  "conclusion": "Mismo motivo que crud-get.json: falta la autoridad USUARIO_EDITAR o rol ADMIN. Limitación conocida, no se intentó evitarla."
+  "conclusion": "Mismo motivo que crud-get.json: falta la autoridad USUARIO_EDITAR o rol ADMIN. Limitación conocida, no se intentó evitarla.",
+  "prueba_final_confirmada_admin_real": {
+    "fecha_captura": "2026-07-31T07:36:00Z",
+    "herramienta": "Playwright (navegador Chromium real) — edición hecha desde la UI (modal 'Modificar' de crud-usuarios.html), no curl directo. Ver evidencia/crud-navegador.har para la traza completa de red.",
+    "request": {
+      "method": "PUT",
+      "url": "http://localhost:8080/api/admin/usuarios/2",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, accessToken real del admin]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "nombres": "Usuario",
+        "apellidos": "Demo Editado Navegador",
+        "estadoCuenta": false,
+        "roles": ["CLIENTE"]
+      }
+    },
+    "response": {
+      "status": 200,
+      "statusText": "OK",
+      "body": {
+        "idUsuario": 2,
+        "nombres": "Usuario",
+        "apellidos": "Demo Editado Navegador",
+        "correo": "usuario.demo@uteq.edu.ec",
+        "estadoCuenta": false,
+        "roles": ["CLIENTE"]
+      }
+    },
+    "conclusion": "Edición real ejecutada haciendo clic en 'Modificar' desde el navegador (no solo vía API), confirmando que el flujo completo UI → fetchWithAuth → backend → PostgreSQL funciona con credenciales ADMIN reales."
+  }
 }

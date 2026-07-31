@@ -22,5 +22,33 @@
       "fieldErrors": null
     }
   },
-  "conclusion": "Resultado esperado: el usuario de prueba se registró con rol CLIENTE (el único permitido por POST /auth/registro para registro público), y AdminUserController protege este endpoint con @PreAuthorize(\"hasAuthority('USUARIO_VER') or hasRole('ADMIN')\"). No se cuenta con la contraseña en texto plano del seed admin@artisync.com (solo su hash bcrypt en la migración Flyway), y no se intentó ningún acceso indebido (p. ej. manipular la base de datos del backend) para evitar esta restricción — se documenta como limitación conocida, tal como se pidió."
+  "conclusion": "Resultado esperado: el usuario de prueba se registró con rol CLIENTE (el único permitido por POST /auth/registro para registro público), y AdminUserController protege este endpoint con @PreAuthorize(\"hasAuthority('USUARIO_VER') or hasRole('ADMIN')\"). No se cuenta con la contraseña en texto plano del seed admin@artisync.com (solo su hash bcrypt en la migración Flyway), y no se intentó ningún acceso indebido (p. ej. manipular la base de datos del backend) para evitar esta restricción — se documenta como limitación conocida, tal como se pidió.",
+  "prueba_final_confirmada_admin_real": {
+    "fecha_captura": "2026-07-31T07:39:00Z",
+    "herramienta": "curl -i, con accessToken real obtenido de POST /api/auth/login usando admin@artisync.com",
+    "request": {
+      "method": "GET",
+      "url": "http://localhost:8080/api/admin/usuarios?page=0&size=10&sortBy=idUsuario&direction=desc",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, accessToken real del admin]",
+        "Accept": "application/json"
+      }
+    },
+    "response": {
+      "status": 200,
+      "statusText": "OK",
+      "body": {
+        "content": [
+          {"idUsuario": 2, "nombres": "Usuario", "apellidos": "Demo Editado Navegador", "correo": "usuario.demo@uteq.edu.ec", "estadoCuenta": true, "roles": ["CLIENTE"]},
+          {"idUsuario": 1, "nombres": "Administrador", "apellidos": "Artisync", "correo": "admin@artisync.com", "estadoCuenta": true, "roles": ["ADMIN"]}
+        ],
+        "number": 0,
+        "pageSize": 10,
+        "totalElements": 2,
+        "totalPages": 1,
+        "last": true
+      }
+    },
+    "conclusion": "Con la contraseña real del admin (Admin123!) obtenida y verificada en esta sesión, el 403 documentado arriba queda superado: la limitación anterior no era un bug del backend sino la ausencia de credenciales ADMIN reales. Confirma que @PreAuthorize funciona correctamente en ambos sentidos (bloquea CLIENTE, permite ADMIN)."
+  }
 }

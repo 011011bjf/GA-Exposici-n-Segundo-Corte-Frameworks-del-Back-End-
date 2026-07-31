@@ -46,5 +46,31 @@
       }
     },
     "conclusion": "El 403 es ahora el ÚNICO bloqueo, igual que en GET/PUT/POST de /admin/usuarios (ver crud-get.json, crud-put.json, crud-post.json). El bug de contrato (400) quedó eliminado. La limitación restante sigue siendo la misma documentada en el informe: no se cuenta con credenciales reales de un usuario ADMIN para completar la operación con éxito."
+  },
+  "prueba_final_confirmada_admin_real": {
+    "fecha_captura": "2026-07-31T07:36:30Z",
+    "herramienta": "Playwright (navegador Chromium real) — cambio de estado hecho desde la UI (botón 'Activar' de crud-usuarios.html), incluyendo el diálogo confirm() nativo del navegador. Ver evidencia/crud-navegador.har para la traza completa de red.",
+    "request": {
+      "method": "PATCH",
+      "url": "http://localhost:8080/api/admin/usuarios/2/estado",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, accessToken real del admin]",
+        "Content-Type": "application/json"
+      },
+      "body": { "estadoCuenta": true }
+    },
+    "response": {
+      "status": 200,
+      "statusText": "OK",
+      "body": {
+        "idUsuario": 2,
+        "nombres": "Usuario",
+        "apellidos": "Demo Editado Navegador",
+        "correo": "usuario.demo@uteq.edu.ec",
+        "estadoCuenta": true,
+        "roles": ["CLIENTE"]
+      }
+    },
+    "conclusion": "Con credenciales ADMIN reales, el mismo payload que antes devolvía 403 ahora devuelve 200 y el body refleja correctamente el nuevo estadoCuenta. Cierra definitivamente la limitación documentada arriba: el fix de contrato era correcto y el único bloqueo real era de autorización, no de la lógica del backend ni del frontend."
   }
 }

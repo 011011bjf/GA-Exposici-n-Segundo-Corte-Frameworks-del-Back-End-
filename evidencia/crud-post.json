@@ -32,5 +32,44 @@
       "fieldErrors": null
     }
   },
-  "conclusion_clave": "El resultado cambió de 404 Not Found (endpoint inexistente, antes de la corrección) a 403 Forbidden (endpoint real, protegido correctamente) — esto CONFIRMA que la corrección de URL del prompt anterior funcionó: el payload y la ruta ahora son válidos según el backend real, solo falta la autorización de administrador para completar la creación. No se pudo obtener un token con rol ADMIN real (no se conoce la contraseña del seed admin@artisync.com, solo su hash), así que la creación exitosa end-to-end queda como limitación conocida, no como algo inventado."
+  "conclusion_clave": "El resultado cambió de 404 Not Found (endpoint inexistente, antes de la corrección) a 403 Forbidden (endpoint real, protegido correctamente) — esto CONFIRMA que la corrección de URL del prompt anterior funcionó: el payload y la ruta ahora son válidos según el backend real, solo falta la autorización de administrador para completar la creación. No se pudo obtener un token con rol ADMIN real (no se conoce la contraseña del seed admin@artisync.com, solo su hash), así que la creación exitosa end-to-end queda como limitación conocida, no como algo inventado.",
+  "prueba_final_confirmada_admin_real": {
+    "fecha_captura": "2026-07-31T07:40:40Z",
+    "herramienta": "curl -i, con accessToken real obtenido de POST /api/auth/login usando admin@artisync.com",
+    "request": {
+      "method": "POST",
+      "url": "http://localhost:8080/api/admin/usuarios",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzUxMiJ9...[TRUNCADO por seguridad, accessToken real del admin]",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "nombres": "Prueba",
+        "apellidos": "Admin Creado",
+        "correo": "test.admin.creado2@uteq.edu.ec",
+        "contrasena": "TestEval2026",
+        "fechaNacimiento": "1998-03-10",
+        "roles": ["CLIENTE"],
+        "estadoCuenta": true
+      }
+    },
+    "response": {
+      "status": 201,
+      "statusText": "Created",
+      "body": {
+        "idUsuario": 3,
+        "nombres": "Prueba",
+        "apellidos": "Admin Creado",
+        "correo": "test.admin.creado2@uteq.edu.ec",
+        "fechaNacimiento": "1998-03-10",
+        "idPais": null,
+        "nombrePais": null,
+        "fechaRegistro": "2026-07-31T07:40:40.267981",
+        "estadoCuenta": true,
+        "roles": ["CLIENTE"],
+        "dosFactoresHabilitado": false
+      }
+    },
+    "conclusion": "Con credenciales ADMIN reales, la creación termina en 201 Created (antes era 403). Confirma end-to-end que POST /api/admin/usuarios, protegido por @PreAuthorize, funciona correctamente para un usuario con la autoridad USUARIO_CREAR / rol ADMIN. La limitación anterior queda formalmente cerrada."
+  }
 }
